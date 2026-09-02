@@ -85,5 +85,5 @@ async def update_student(student_id: int, std: StudentCreate, db: Session = Depe
     for key, value in std.model_dump().items():
         setattr(db_student, key, value)
     db.commit()
-    db.refresh(db_student)
+    db.refresh(db_student) 
     return db_student
