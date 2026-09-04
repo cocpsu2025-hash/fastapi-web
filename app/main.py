@@ -11,7 +11,7 @@ from .schemas import PhoneCreate, PhoneResponse, StudentCreate, StudentReponse, 
 
 from .database import Base, get_db, engine
 
-Base.metadata.drop_all(bind=engine)
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -110,3 +110,21 @@ async def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_subject)
     return db_subject
+
+@app.get("/subjects", response_model=List[SubjectResponse])
+async def read_subjects( db: Session = Depends(get_db) ):
+    return db.query(SubjectDB).all()
+
+@app.post("/students/{student_id}/subjects/{subject_id}")
+async def register_subject(student_id: int, subject_id: int, db: Session = Depends(get_db) ):
+    student = db.query(StudentDB).filter(StudentDB.id == student_id).first()
+    subject = db.query(SubjectDB).filter(SubjectDB.id == subject_id).first()
+
+    if not student:
+        return {"error": "Student not found"}
+    if not subject:
+        return {"error" : "Subject not found"}
+
+    student.subjects.append(subject)
+    db.commit()
+    return { "message" : "Registration sucessful"}
