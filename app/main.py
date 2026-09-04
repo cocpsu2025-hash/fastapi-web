@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import declarative_base
 
 from .models import PhoneDB, StudentDB
-from .schemas import StudentCreate, StudentReponse
+from .schemas import PhoneCreate, PhoneResponse, StudentCreate, StudentReponse
 
 from .database import Base, get_db, engine
 
@@ -51,8 +51,50 @@ async def update_student(student_id: int, std: StudentCreate, db: Session = Depe
     db_student = db.query(StudentDB).filter(StudentDB.id == student_id).first()
     if db_student is None:
         raise HTTPException(status_code = 404, detail = "Student not found")
-    for key, value in std.model_dump().items():
-        setattr(db_student, key, value)
+
+    db_student.name = std.name
+    db_student.score = std.score
+
+    for phone in std.phones:
+        if not any( p.phone_no == phone.phone_no  for p in db_student.phones):
+            db_student.phones.append( PhoneDB(phone_no = phone.phone_no) )
+ 
+    # db_student.phones = ???
+
+    # for key, value in std.model_dump().items():
+    #     setattr(db_student, key, value)
+
     db.commit()
     db.refresh(db_student)
     return db_student
+
+@app.get("/phones", response_model=List[PhoneResponse])
+async def read_phones( db: Session = Depends(get_db) ):
+    return db.query(PhoneDB).all()
+
+@app.get("/phones/{phone_id}", response_model=PhoneResponse)
+async def read_student(phone_id: int, db: Session = Depends(get_db)):
+    db_phone = db.query(PhoneDB).filter(PhoneDB.id == phone_id).first()
+    if db_phone is None:
+        raise HTTPException(status_code = 404, detail = "Phone not found")
+    return db_phone
+
+@app.put("/phones/{phone_id}", response_model=PhoneResponse)
+async def update_student(phone_id: int, ph: PhoneCreate, db: Session = Depends(get_db)):
+    phone_db = db.query(PhoneDB).filter(PhoneDB.id == phone_id).first()
+    if phone_db is None:
+        raise HTTPException(status_code = 404, detail = "Phone not found")
+
+    phone_db.phone_no = ph.phone_no  
+    db.commit()
+    db.refresh(phone_db)
+    return phone_db
+
+@app.delete("/phones/{phone_id}")
+async def delete_phone(phone_id: int, db: Session = Depends(get_db)):
+    db_phone = db.query(PhoneDB).filter(PhoneDB.id == phone_id).first()
+    if db_phone is None:
+        raise HTTPException(status_code = 404, detail = "phone not found")
+    db.delete(db_phone)
+    db.commit()
+    return { "message": "Phone deleted"}

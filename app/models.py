@@ -10,7 +10,8 @@ class StudentDB(Base):
     score = Column(Float, nullable=False)
 
     phones = relationship(
-        "PhoneDB", back_populates="student"
+        "PhoneDB", back_populates="student", 
+        cascade="all, delete-orphan"
     )
 
 class PhoneDB(Base):

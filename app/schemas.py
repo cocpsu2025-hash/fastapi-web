@@ -12,7 +12,7 @@ class PhoneResponse(Phone):
         from_attributes = True
 
 class Student(BaseModel):
-    id: int | None = None
+    # id: int | None = None
     name: str
     score: float
 
