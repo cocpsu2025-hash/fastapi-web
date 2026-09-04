@@ -11,7 +11,9 @@ from .schemas import PhoneCreate, PhoneResponse, StudentCreate, StudentReponse
 
 from .database import Base, get_db, engine
 
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
 @app.post("/students", response_model=StudentReponse)
 async def create_student(student: StudentCreate, db: Session = Depends(get_db)):
