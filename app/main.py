@@ -6,12 +6,12 @@ from sqlalchemy import  create_engine
 from sqlalchemy.orm import Session 
 from sqlalchemy.ext.declarative import declarative_base
 
-from .models import PhoneDB, StudentDB
-from .schemas import PhoneCreate, PhoneResponse, StudentCreate, StudentReponse
+from .models import PhoneDB, StudentDB, SubjectDB
+from .schemas import PhoneCreate, PhoneResponse, StudentCreate, StudentReponse, SubjectCreate, SubjectResponse
 
 from .database import Base, get_db, engine
 
-# Base.metadata.drop_all(bind=engine)
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -100,3 +100,13 @@ async def delete_phone(phone_id: int, db: Session = Depends(get_db)):
     db.delete(db_phone)
     db.commit()
     return { "message": "Phone deleted"}
+
+
+# ============ create subject =====
+@app.post("/subjects", response_model=SubjectResponse)
+async def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
+    db_subject = SubjectDB(name = subject.name)
+    db.add(db_subject)
+    db.commit()
+    db.refresh(db_subject)
+    return db_subject
