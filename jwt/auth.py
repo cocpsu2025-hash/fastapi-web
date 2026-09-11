@@ -22,6 +22,8 @@ users = {
     }
 }
 
+blacklist = set()
+
 @router.post("/login")
 async def login( form_data: OAuth2PasswordRequestForm = Depends()):
     print(form_data.username)
@@ -36,7 +38,7 @@ async def login( form_data: OAuth2PasswordRequestForm = Depends()):
    
     print(user)
 
-    expire = datetime.now(timezone.utc) + timedelta(minutes=1)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=20)
 
     token = jwt.encode( {
         "sub": user["username"],
@@ -51,6 +53,8 @@ async def login( form_data: OAuth2PasswordRequestForm = Depends()):
     }
 
 def get_current_user(token: str = Depends(oauth2_scheme) ): 
+    if token in blacklist:
+        raise HTTPException( status_code=401, detail="Token has been revoked")
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -64,3 +68,11 @@ def get_current_user(token: str = Depends(oauth2_scheme) ):
         return username
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+@router.get("/logout")
+async def logout( token: str = Depends(oauth2_scheme)):
+    blacklist.add(token)
+
+    return {
+        "message" : "Successfully logged out"
+    }
