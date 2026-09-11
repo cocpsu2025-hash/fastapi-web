@@ -1,5 +1,5 @@
 
-import datetime
+from datetime import datetime, timezone, timedelta
 from pwdlib import PasswordHash
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -36,7 +36,7 @@ async def login( form_data: OAuth2PasswordRequestForm = Depends()):
    
     print(user)
 
-    expire = datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=1)
 
     token = jwt.encode( {
         "sub": user["username"],
